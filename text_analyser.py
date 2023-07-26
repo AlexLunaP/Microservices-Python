@@ -1,74 +1,70 @@
+# text_analyser.py
+import grpc
+from concurrent import futures
 import string
 import re
+import text_analyser_pb2
+import text_analyser_pb2_grpc
 
-key_words = ["conduct","contempt","covid","party",
-	     	"punishment","gathering","law","responsibility"]
+key_words = ["conduct", "contempt", "covid", "party", 
+             "punishment", "gathering", "law", "responsibility"]
 
-# Open the file in read mode
-text = open("Boris.txt", "r")
+def calculate_statistics(text):
+    words_by_frequency = {}
+    total_words = 0
+    total_words_length = 0
+    total_sentences = 0
 
-# Create an empty dictionary
-words_by_frequency = dict()
+    enumeration_pattern = r'\b(?:[a-hj-zA-HJ-Z]|[ivxIVX]+)\)'
+    additional_punctuation = '“”‘’–—…«»•'
+    all_punctuation = string.punctuation + string.digits + additional_punctuation
 
-# Define the pattern for enumerations (letter or Roman numeral) with parentheses
-enumeration_pattern = r'\b(?:[a-hj-zA-HJ-Z]|[ivxIVX]+)\)'
+    for line in text:
+        line = line.strip().lower()
+        cleaned_line = re.sub(enumeration_pattern, '', line)
+        cleaned_line = cleaned_line.translate(str.maketrans('', '', all_punctuation))
+        words = cleaned_line.lower().split()
+        words = [word for word in words if word]
 
-additional_punctuation = '“”‘’–—…«»•'
+        total_words += len(words)
+        total_words_length += sum(len(word) for word in words)
+        total_sentences += len(re.findall(r'[.!?;:]', line))
 
-# Combine the standard punctuation, digits, and additional punctuation characters
-all_punctuation = string.punctuation + string.digits + additional_punctuation
+        for word in words:
+            total_words += 1
+            total_words_length += len(word)
 
-total_words = 0
-total_words_length = 0
-total_sentences = 0
+            if word in key_words:
+                print (word)
+                if word in words_by_frequency:
+                    words_by_frequency[word] += 1
+                else:
+                    words_by_frequency[word] = 1
 
-# Loop through each line of the file
-for line in text:
-	# Remove the leading spaces and newline character
-	line = line.strip()
+    average_word_length = total_words_length / total_words
+    average_sentence_length = total_words / total_sentences
 
-	# Convert the characters in line to
-	# lowercase to avoid case mismatch
-	line = line.lower()
+    return words_by_frequency, average_word_length, average_sentence_length
 
-    # Remove enumerations using regex
-	cleaned_line = re.sub(enumeration_pattern, '', line)
+class TextAnalyserServicer(text_analyser_pb2_grpc.TextAnalyserServiceServicer):
+    def AnalyseText(self, request, context):
+        text = request.text.splitlines()
+        words_by_frequency, average_word_length, average_sentence_length = calculate_statistics(text)
 
-	# Remove the punctuation marks, digits, and additional punctuation from the line
-	cleaned_line = cleaned_line.translate(str.maketrans('', '', all_punctuation))
+        response = text_analyser_pb2.AnalysisResponse(
+            words_by_frequency=words_by_frequency,
+            average_word_length=average_word_length,
+            average_sentence_length=average_sentence_length
+        )
 
-	# Split the line into words
-	words = cleaned_line.split()
+        return response
 
-	# Filter out empty strings from the list of words
-	words = [word for word in words if word]
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    text_analyser_pb2_grpc.add_TextAnalyserServiceServicer_to_server(TextAnalyserServicer(), server)
+    server.add_insecure_port('[::]:50001')
+    server.start()
+    server.wait_for_termination()
 
-	# Count the total words and total words length
-	total_words += len(words)
-	total_words_length += sum(len(word) for word in words)
-
-	# Count the number of sentences in the line (assuming sentences end with '.', '!', '?')
-	total_sentences += len(re.findall(r'[.!?;:]', line))
-
-	# Iterate over each word in line
-	for word in words:
-		#Calculate average word length
-		total_words = total_words + 1
-		total_words_length = total_words_length + len(word)
-
-		if word in key_words:
-			# Check if the word is already in dictionary
-			if word in words_by_frequency:
-				# Increment count of word by 1
-				words_by_frequency[word] = words_by_frequency[word] + 1
-			else:
-				# Add the word to dictionary with count 1
-				words_by_frequency[word] = 1
-
-print("Average word length = ", round(total_words_length/total_words, 4), "≈", round(total_words_length/total_words),"letters \n")
-print("Average sentence length ≈", round(total_words / total_sentences, 4), "≈", round(total_words / total_sentences), "words \n")
-
-# Print words by frequency
-for key in list(words_by_frequency.keys()):
-	print("The word", key, "appears", words_by_frequency[key], "times")
- 
+if __name__ == '__main__':
+    serve()

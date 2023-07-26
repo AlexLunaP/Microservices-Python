@@ -1,0 +1,16 @@
+// text_analyser.proto
+syntax = "proto3";
+
+message AnalysisRequest {
+    string text = 1;
+}
+
+message AnalysisResponse {
+    map<string, int32> words_by_frequency = 1;
+    double average_word_length = 2;
+    double average_sentence_length = 3;
+}
+
+service TextAnalyserService {
+    rpc AnalyseText(AnalysisRequest) returns (AnalysisResponse);
+}

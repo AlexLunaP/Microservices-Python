@@ -1,0 +1,76 @@
+<!-- statistics_template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Statistics Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #444;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        p {
+            color: #666;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+
+        .word-list {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .average-stats {
+            margin-top: 30px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .word {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .frequency {
+            color: #666;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="word-list">
+        <h1>Statistics Data</h1>
+        <p>Words by frequency:</p>
+        <ul>
+            {% for word, frequency in statistics.words_by_frequency.items() %}
+            <li><span class="word">{{ word }}:</span> <span class="frequency">{{ frequency }}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="average-stats">
+        <p>Average word length: <span class="word">{{ statistics.average_word_length }}</span></p>
+        <p>Average sentence length: <span class="word">{{ statistics.average_sentence_length }}</span></p>
+    </div>
+</body>
+</html>

@@ -8,6 +8,7 @@ def analyse_text(text):
     stub = text_analyser_pb2_grpc.TextAnalyserServiceStub(channel)
 
     request = text_analyser_pb2.AnalysisRequest(text="".join(text))
+    
     response = stub.AnalyseText(request)
 
     return response

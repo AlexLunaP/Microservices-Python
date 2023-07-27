@@ -35,7 +35,6 @@ def calculate_statistics(text):
             total_words_length += len(word)
 
             if word in key_words:
-                print (word)
                 if word in words_by_frequency:
                     words_by_frequency[word] += 1
                 else:
@@ -57,7 +56,31 @@ class TextAnalyserServicer(text_analyser_pb2_grpc.TextAnalyserServiceServicer):
             average_sentence_length=average_sentence_length
         )
 
+        # Create a channel to the Statistics Storage microservice
+        with grpc.insecure_channel('localhost:50002') as channel:  # Make sure the correct port (50002) is used
+            # Create a stub for the Statistics Storage service
+            stub = text_analyser_pb2_grpc.StatisticsStorageServiceStub(channel)
+
+            # Create a request to send the calculated statistics to the Statistics Storage microservice
+            storage_request = text_analyser_pb2.StorageRequest()
+            storage_request.words_by_frequency.update(words_by_frequency)
+            storage_request.average_word_length = average_word_length
+            storage_request.average_sentence_length = average_sentence_length
+
+            try:
+                # Make the gRPC call to the Statistics Storage microservice
+                storage_response = stub.StoreStatistics(storage_request)
+                print("Sending statistics to Statistics Storage microservice.")
+            except grpc.RpcError as e:
+                # Handle the error response from the server
+                if e.code() == grpc.StatusCode.INTERNAL:
+                    print(f"Error storing statistics: {e.details()}")
+                else:
+                    # Handle other types of errors, if needed
+                    print("An error occurred.")  # This is the error printed when running the app
+
         return response
+
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

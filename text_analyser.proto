@@ -1,5 +1,17 @@
-// text_analyser.proto
 syntax = "proto3";
+
+service TextAnalyserService {
+    rpc AnalyseText(AnalysisRequest) returns (AnalysisResponse);
+}
+
+service StatisticsStorageService {
+    rpc StoreStatistics(StorageRequest) returns (StorageResponse);
+    rpc GetStatistics(GetStatisticsRequest) returns (GetStatisticsResponse);
+}
+
+service WebDisplayService {
+    rpc GetStatistics(GetStatisticsRequest) returns (GetStatisticsResponse);
+}
 
 message AnalysisRequest {
     string text = 1;
@@ -7,10 +19,24 @@ message AnalysisRequest {
 
 message AnalysisResponse {
     map<string, int32> words_by_frequency = 1;
-    double average_word_length = 2;
-    double average_sentence_length = 3;
+    float average_word_length = 2;
+    float average_sentence_length = 3;
 }
 
-service TextAnalyserService {
-    rpc AnalyseText(AnalysisRequest) returns (AnalysisResponse);
+message GetStatisticsRequest {}
+
+message GetStatisticsResponse {
+    map<string, int32> words_by_frequency = 1;
+    float average_word_length = 2;
+    float average_sentence_length = 3;
+}
+
+message StorageRequest {
+    map<string, int32> words_by_frequency = 1;
+    float average_word_length = 2;
+    float average_sentence_length = 3;
+}
+
+message StorageResponse {
+    string message = 1;
 }

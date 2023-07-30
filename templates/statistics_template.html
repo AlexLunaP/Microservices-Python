@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Statistics Data</title>
+    <title>Text Analyser</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,7 +29,11 @@
             margin: 5px 0;
         }
 
-        .word-list {
+        .header {
+            text-align: center;
+        }
+
+        .words_by_frequency {
             background-color: #fff;
             border: 1px solid #ccc;
             padding: 10px;
@@ -58,19 +62,26 @@
     </style>
 </head>
 <body>
-    <div class="word-list">
-        <h1>Statistics Data</h1>
+    <h1>Text Analyser</h1>
+    <div class="header">
+        <p>This is the web page for my microservice-based application for Data Driven Microservices module.</p>
+    </div>
+    <h2>Text analysis results</h2>
+    Analysis results for Boris.txt:</p>
+
+    <div class="words_by_frequency">
         <p>Words by frequency:</p>
         <ul>
-            {% for word, frequency in statistics.words_by_frequency.items() %}
+            {% for word, frequency in words_by_frequency.items() %}
             <li><span class="word">{{ word }}:</span> <span class="frequency">{{ frequency }}</span></li>
             {% endfor %}
         </ul>
     </div>
 
+
     <div class="average-stats">
-        <p>Average word length: <span class="word">{{ statistics.average_word_length }}</span></p>
-        <p>Average sentence length: <span class="word">{{ statistics.average_sentence_length }}</span></p>
+        <p>Average word length: <span class="word">{{ average_word_length }}</span></p>
+        <p>Average sentence length: <span class="word">{{ average_sentence_length }}</span></p>
     </div>
 </body>
 </html>

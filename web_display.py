@@ -24,11 +24,7 @@ def get_statistics():
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET'])
-def home():
-    return render_template('home_template.html')
-
-@app.route('/statistics', methods=['GET','POST'])
+@app.route('/', methods=['GET','POST'])
 def display_statistics():
     statistics = get_statistics()
 
@@ -36,17 +32,14 @@ def display_statistics():
     if statistics is not None:
         # Extract the required data from the response
         words_by_frequency = dict(statistics.words_by_frequency)
-        average_word_length = float(statistics.average_word_length)
-        average_sentence_length = float(statistics.average_sentence_length)
+        average_word_length = str(round(float(statistics.average_word_length), 4)) + " ~ " + str(round(float(statistics.average_word_length))) + " letters"
+        average_sentence_length = str(round(float(statistics.average_sentence_length), 4)) + " ~ " + str(round(float(statistics.average_sentence_length))) + " words"
 
-         # Process the statistics as needed and format the response
-        response_data = {
-            'words_by_frequency': words_by_frequency,
-            'average_word_length': average_word_length,
-            'average_sentence_length': average_sentence_length
-        }
-
-        return render_template('statistics_template.html', statistics=response_data)
+        # Render the template and pass the data as variables
+        return render_template('statistics_template.html',
+                               words_by_frequency=words_by_frequency,
+                               average_word_length=average_word_length,
+                               average_sentence_length=average_sentence_length)
     else:
         # Return the error response to the client
         return jsonify({"error": "Error fetching statistics"}), 500

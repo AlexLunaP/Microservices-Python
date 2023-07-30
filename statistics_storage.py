@@ -61,7 +61,7 @@ class StatisticsStorageServicer(text_analyser_pb2_grpc.StatisticsStorageServiceS
         try:
             # Fetch stored statistics from Redis
             words_by_frequency = {
-                word.decode(): int(float(redis_client.get(word))) for word in redis_client.keys('*')
+                word.decode(): int(float(redis_client.get(word))) for word in redis_client.keys('*') if not word.startswith(b'average_')
             }
 
             # Convert the values for average_word_length and average_sentence_length to floats

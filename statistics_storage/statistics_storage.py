@@ -7,7 +7,7 @@ import text_analyser_pb2
 import text_analyser_pb2_grpc
 
 # Connect to the Redis server
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+redis_client = redis.StrictRedis(host='redis', port=6379, db=0)
 
 def store_statistics_in_redis(statistics):
     try:
@@ -33,6 +33,10 @@ def store_statistics_in_redis(statistics):
         # Store average sentence length in Redis
         redis_client.set('average_sentence_length', float(statistics['average_sentence_length']))
 
+        print("Data in Redis:")
+        for key in redis_client.keys('*'):
+            print(key, redis_client.get(key))
+
         print("Statistics stored in Redis successfully.")
 
     except redis.RedisError as e:
@@ -47,7 +51,7 @@ def store_statistics_in_redis(statistics):
 
 
 class StatisticsStorageServicer(text_analyser_pb2_grpc.StatisticsStorageServiceServicer):
-    def StoreStatistics(self, request, context):  # Change the method name to StoreStatistics
+    def StoreStatistics(self, request, context):
         statistics = {
             'words_by_frequency': dict(request.words_by_frequency),
             'average_word_length': request.average_word_length,
@@ -66,7 +70,7 @@ class StatisticsStorageServicer(text_analyser_pb2_grpc.StatisticsStorageServiceS
 
             # Convert the values for average_word_length and average_sentence_length to floats
             average_word_length = float(redis_client.get('average_word_length') or 0)  # Use 0 as default if not found
-            average_sentence_length = float(redis_client.get('average_sentence_length') or 0)  # Use 0 as default if not found
+            average_sentence_length = float(redis_client.get('average_sentence_length') or 0)
 
             # Create and return the response
             response = text_analyser_pb2.GetStatisticsResponse(

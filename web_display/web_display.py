@@ -1,5 +1,6 @@
 # web_display.py
 import logging
+from time import sleep
 from flask import Flask, jsonify, request, render_template
 import grpc
 import text_analyser_pb2
@@ -9,7 +10,7 @@ from google.protobuf import empty_pb2
 
 def get_statistics():
     print("Fetching statistics from Statistics Storage microservice.")
-    with grpc.insecure_channel('localhost:50002') as channel:
+    with grpc.insecure_channel('statistics_storage:50002') as channel:
         print("Channel created. Making gRPC call.")
         stub = text_analyser_pb2_grpc.StatisticsStorageServiceStub(channel)
         try:
@@ -28,7 +29,7 @@ app = Flask(__name__)
 def display_statistics():
     statistics = get_statistics()
 
-    # Check if the statistics is not None (i.e., no error occurred)
+    # Check if the statistics are not None (i.e., no error occurred)
     if statistics is not None:
         # Extract the required data from the response
         words_by_frequency = dict(statistics.words_by_frequency)

@@ -5,6 +5,7 @@ import string
 import re
 import text_analyser_pb2
 import text_analyser_pb2_grpc
+from prometheus_client import start_http_server, Counter, Summary
 
 key_words = ["conduct", "contempt", "covid", "party", 
              "punishment", "gathering", "law", "responsibility"]
@@ -47,17 +48,24 @@ def calculate_statistics(text):
 
 class TextAnalyserServicer(text_analyser_pb2_grpc.TextAnalyserServiceServicer):
     def AnalyseText(self, request, context):
-        text = request.text.splitlines()
-        words_by_frequency, average_word_length, average_sentence_length = calculate_statistics(text)
+        # Create a Prometheus counter to track the total number of requests
+        REQUESTS = Counter('http_requests_total', 'Total number of HTTP requests')
+        #Create a Prometheus summary to track the request processing time
+        REQUEST_TIME = Summary('http_request_duration_seconds', 'HTTP request processing time')
 
-        response = text_analyser_pb2.AnalysisResponse(
-            words_by_frequency=words_by_frequency,
-            average_word_length=average_word_length,
-            average_sentence_length=average_sentence_length
-        )
+        with REQUEST_TIME.time():
+            REQUESTS.inc()
+            text = request.text.splitlines()
+            words_by_frequency, average_word_length, average_sentence_length = calculate_statistics(text)
+            
+            response = text_analyser_pb2.AnalysisResponse(
+                words_by_frequency=words_by_frequency,
+                average_word_length=average_word_length,
+                average_sentence_length=average_sentence_length
+            )
 
         # Create a channel to the Statistics Storage microservice
-        with grpc.insecure_channel('localhost:50002') as channel:  # Make sure the correct port (50002) is used
+        with grpc.insecure_channel('statistics_storage:50002') as channel:
             # Create a stub for the Statistics Storage service
             stub = text_analyser_pb2_grpc.StatisticsStorageServiceStub(channel)
 
@@ -77,10 +85,9 @@ class TextAnalyserServicer(text_analyser_pb2_grpc.TextAnalyserServiceServicer):
                     print(f"Error storing statistics: {e.details()}")
                 else:
                     # Handle other types of errors, if needed
-                    print("An error occurred.")  # This is the error printed when running the app
+                    print("An error occurred.")
 
         return response
-
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -90,4 +97,5 @@ def serve():
     server.wait_for_termination()
 
 if __name__ == '__main__':
+    start_http_server(8000)
     serve()

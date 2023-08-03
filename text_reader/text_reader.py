@@ -1,17 +1,25 @@
 # text_reader.py
+from time import sleep
+import time
 import grpc
 import text_analyser_pb2
 import text_analyser_pb2_grpc
+import requests
 
 def analyse_text(text):
-    channel = grpc.insecure_channel('localhost:50001')
+    channel = grpc.insecure_channel('text_analyser:50001')
     stub = text_analyser_pb2_grpc.TextAnalyserServiceStub(channel)
 
     request = text_analyser_pb2.AnalysisRequest(text="".join(text))
-    
-    response = stub.AnalyseText(request)
 
-    return response
+    try:
+        response = stub.AnalyseText(request)
+        return response
+    except grpc.RpcError as e:
+        # Retry the connection after a short sleep
+        print("Failed to connect to the text_analyser service. Retrying in 5 seconds...")
+        time.sleep(5)
+        return analyse_text(text)
 
 def read_and_analyse_file(file_path):
     with open(file_path, "r") as file:

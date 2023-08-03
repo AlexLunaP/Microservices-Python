@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'text_analyser'
+    static_configs:
+      - targets: ['text_analyser:8000']

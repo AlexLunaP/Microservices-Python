@@ -1,0 +1,43 @@
+version: '3'
+services:
+  text_analyser:
+    image: alexlunap/text_analyser:latest
+    ports:
+      - "50001:50001"
+    depends_on:
+      - "statistics_storage"
+
+  text_reader:
+    image: alexlunap/text_reader:latest
+    depends_on:
+      - "text_analyser"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  statistics_storage:
+    image: alexlunap/statistics_storage:latest
+    ports:
+      - "50002:50002"
+    depends_on:
+      - "redis"
+
+  web_display:
+    image: alexlunap/web_display:latest
+    ports:
+      - "50003:50003"
+      - "8000:8000"  # Prometheus metrics endpoint
+    depends_on:
+      - "statistics_storage"
+      - "text_reader"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    depends_on:
+      - "text_analyser"
